@@ -12,6 +12,11 @@ if osp.join(CAFFE_ROOT, 'python') not in sys.path:
 import caffe
 from caffe.proto import caffe_pb2
 
+
+python_loss_list = ['L1LossLayer', 'KLLossLayer', 'sKLLossLayer', 'iKLLossLayer', 'GBDLossLayer']
+cpp_loss_list = ['KLDivLoss', 'EuclideanLoss', 'L1Loss', 'SigmoidCrossEntropyLoss', 'SoftmaxWithLoss']
+
+
 def _get_include(phase):
     inc = caffe_pb2.NetStateRule()
     if phase == 'train':
