@@ -6,10 +6,11 @@ import google.protobuf as pb
 import google.protobuf.text_format
 from argparse import ArgumentParser
 import math
-CAFFE_ROOT = osp.join(osp.dirname(__file__), '..', 'caffe')
-if osp.join(CAFFE_ROOT, 'python') not in sys.path:
-    sys.path.insert(0, osp.join(CAFFE_ROOT, 'python'))
+# CAFFE_ROOT = osp.join(osp.dirname(__file__), '..', 'caffe')
+# if osp.join(CAFFE_ROOT, 'python') not in sys.path:
+#     sys.path.insert(0, osp.join(CAFFE_ROOT, 'python'))
 import caffe
+print caffe.__file__, 'in basic module'
 from caffe.proto import caffe_pb2
 
 
@@ -137,11 +138,21 @@ def Bilinear_upsample(name, bottom, num_output, factor, lr_mult=1, weight_filler
     stride=factor
     pad=int(math.ceil((factor-1)/2.))
 
+    kernel_size = int(2*temporal_factor-temporal_factor%2)
+    temporal_stride=temporal_factor
+    temporal_pad=int(math.ceil((temporal_factor-1)/2.))
+
+
+
+
     layer.convolution_param.num_output = num_output
     # layer.convolution_param.group = num_output
     layer.convolution_param.kernel_size.extend([kernel_size])
+    layer.convolution_param.kernel_depth.extend([kernel_depth])
     layer.convolution_param.stride.extend([stride])
+    layer.convolution_param.temporal_stride.extend([temporal_stride])
     layer.convolution_param.pad.extend([pad])
+    layer.convolution_param.temporal_pad.extend([temporal_pad])
     layer.convolution_param.dilation.extend([dilation])
     layer.convolution_param.weight_filler.type = weight_filler
     layer.convolution_param.bias_term = False
