@@ -205,6 +205,8 @@ def Bn_Sc(name, bottom, keep_name=False):
     bn_layer = caffe_pb2.LayerParameter()
     if not keep_name:
         bn_layer.name = 'bn' + name
+    else:
+        bn_layer.name=name
     bn_layer.type = 'BatchNorm'
     bn_layer.bottom.extend([bottom])
     bn_layer.top.extend([top_name])
@@ -212,6 +214,8 @@ def Bn_Sc(name, bottom, keep_name=False):
     scale_layer = caffe_pb2.LayerParameter()
     if not keep_name:
         scale_layer.name = 'scale'+name
+    else:
+        scale_layer.name = name
     scale_layer.type = 'Scale'
     scale_layer.bottom.extend([top_name])
     scale_layer.top.extend([top_name])

@@ -39,11 +39,18 @@ def Bilinear_upsample_3d(name, bottom, num_output, factor, temporal_factor, lr_m
     stride=factor
     pad=int(math.ceil((factor-1)/2.))
 
+    kernel_depth = int(2*temporal_factor-temporal_factor%2)
+    temporal_stride=temporal_factor
+    temporal_pad=int(math.ceil((temporal_factor-1)/2.))
+
     layer.convolution3d_param.num_output = num_output
     # layer.convolution3d_param.group = num_output
     layer.convolution3d_param.kernel_size = kernel_size
+    layer.convolution3d_param.kernel_depth = kernel_depth
     layer.convolution3d_param.stride = stride
+    layer.convolution3d_param.temporal_stride = temporal_stride
     layer.convolution3d_param.pad = pad
+    layer.convolution3d_param.temporal_pad = temporal_pad
     # layer.convolution3d_param.dilation = dilation
     layer.convolution3d_param.weight_filler.type = weight_filler
     layer.convolution3d_param.bias_term = False
@@ -55,7 +62,7 @@ def Res3dBlock(name, bottom, dim, stride, temporal_stride, block_type=None):
     if block_type == 'no_preact':
         res_bottom = bottom
         # 1x1 conv at shortcut branch
-        layers.append(Conv3d(name + '_branch1', res_bottom, dim*4, kernel_size=1, kernel_depth=1, stride=stride, temporal_stride=temporal_stride, pad=0, temporal_pad=0))
+        layers.append(Conv3d(name + '_branch1', res_bottom, dim, kernel_size=1, kernel_depth=1, stride=stride, temporal_stride=temporal_stride, pad=0, temporal_pad=0))
         layers.extend(cbm.Bn_Sc(name + '_branch1', layers[-1].top[0]))
 
         shortcut_top = layers[-1].top[0]
@@ -64,21 +71,21 @@ def Res3dBlock(name, bottom, dim, stride, temporal_stride, block_type=None):
         # res_bottom = layers[-1].top[0]
         res_bottom=bottom
         # 1x1 conv at shortcut branch
-        layers.append(Conv3d(name + '_branch1', res_bottom, dim*4, kernel_size=1, kernel_depth=1, stride=stride, temporal_stride=temporal_stride, pad=0, temporal_pad=0))
+        layers.append(Conv3d(name + '_branch1', res_bottom, dim, kernel_size=1, kernel_depth=1, stride=stride, temporal_stride=temporal_stride, pad=0, temporal_pad=0))
         layers.extend(cbm.Bn_Sc(name + '_branch1', layers[-1].top[0]))
         shortcut_top = layers[-1].top[0]
     else:
         shortcut_top = bottom
         res_bottom=bottom
     # residual branch: conv1 -> conv1_act -> conv2 -> conv2_act -> conv3
-    layers.append(Conv3d(name + '_branch2a', res_bottom, dim, kernel_size=1, kernel_depth=1, stride=1, temporal_stride=1, pad=0, temporal_pad=0))
+    layers.append(Conv3d(name + '_branch2a', res_bottom, dim, kernel_size=3, kernel_depth=3, stride=stride, temporal_stride=temporal_stride, pad=1, temporal_pad=1))
     layers.extend(cbm.Bn_Sc(name + '_branch2a', layers[-1].top[0]))
     layers.extend(cbm.Act(name + '_branch2a', layers[-1].top[0]))
-    layers.append(Conv3d(name + '_branch2b', layers[-1].top[0], dim, kernel_size=3,kernel_depth=3,stride=stride,temporal_stride=temporal_stride, pad=1, temporal_pad=1))
+    layers.append(Conv3d(name + '_branch2b', layers[-1].top[0], dim, kernel_size=3,kernel_depth=3,stride=1,temporal_stride=1, pad=1, temporal_pad=1))
     layers.extend(cbm.Bn_Sc(name + '_branch2b', layers[-1].top[0]))
     layers.extend(cbm.Act(name + '_branch2b', layers[-1].top[0]))
-    layers.append(Conv3d(name + '_branch2c', layers[-1].top[0], dim*4, kernel_size=1, kernel_depth=1, stride=1, temporal_stride=1, pad=0, temporal_pad=0))
-    layers.extend(cbm.Bn_Sc(name + '_branch2c', layers[-1].top[0]))
+    # layers.append(Conv3d(name + '_branch2c', layers[-1].top[0], dim, kernel_size=1, kernel_depth=1, stride=1, temporal_stride=1, pad=0, temporal_pad=0))
+    # layers.extend(cbm.Bn_Sc(name + '_branch2c', layers[-1].top[0]))
     # elementwise addition
     layers.append(cbm.Add(name, [shortcut_top, layers[-1].top[0]]))
     layers.extend(cbm.Act(name, layers[-1].top[0]))
